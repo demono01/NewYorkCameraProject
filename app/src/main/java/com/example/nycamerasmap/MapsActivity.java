@@ -77,6 +77,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         addIcon(iconFactory, "Bangla3", cameraLocation);
 
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(cameraLocation, 9.5f));
+         /*mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {/do odczytywanie współrzędnych z mapy aby nie strzelac na ślepo
+            @Override
+            public void onMapClick(LatLng latLng) {
+
+                Toast.makeText(
+                        MapsActivity.this,
+                        "Lat : " + latLng.latitude + " , "
+                                + "Long : " + latLng.longitude,
+                        Toast.LENGTH_LONG).show();
+
+            }
+        });*/
     }
     private void addIcon(IconGenerator iconFactory, CharSequence text, LatLng position) {
         MarkerOptions markerOptions = new MarkerOptions().
@@ -96,16 +108,5 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         ssb.setSpan(new StyleSpan(BOLD), prefix.length(), sequence.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         return ssb;
     }
-    /*mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
-            @Override
-            public void onMapClick(LatLng latLng) {
 
-                Toast.makeText(
-                        MapsActivity.this,
-                        "Lat : " + latLng.latitude + " , "
-                                + "Long : " + latLng.longitude,
-                        Toast.LENGTH_LONG).show();
-
-            }
-        });*/
 }
