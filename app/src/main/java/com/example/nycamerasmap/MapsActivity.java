@@ -22,10 +22,12 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.maps.android.ui.IconGenerator;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 import static android.graphics.Typeface.BOLD;
@@ -55,7 +57,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void run() {
 
                 demoTask();
-                Toast.makeText(MapsActivity.this, "update", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(MapsActivity.this, "update", Toast.LENGTH_SHORT).show();
                 handler.postDelayed(this, 5000);
             }
         }, 5000);
@@ -116,25 +118,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
+        ArrayList<LatLng> polygonPointsList = new ArrayList<>();
         // Add a marker in Sydney and move the camera
         LatLng cameraLocation = new LatLng(40.78, -73.85);
+        polygonPointsList.add(cameraLocation);
         iconFactory = new IconGenerator(this);
         iconFactory.setStyle(IconGenerator.STYLE_RED);
         addIcon(iconFactory, "Loading", cameraLocation);
 
         cameraLocation = new LatLng(40.75, -73.8);
+        polygonPointsList.add(cameraLocation);
         iconFactory2 = new IconGenerator(this);
         iconFactory2.setStyle(IconGenerator.STYLE_GREEN);
         addIcon(iconFactory2, "Loading", cameraLocation);
 
 
         cameraLocation = new LatLng(40.73, -74);
+        polygonPointsList.add(cameraLocation);
         iconFactory3 = new IconGenerator(this);
         iconFactory3.setStyle(IconGenerator.STYLE_ORANGE);
         addIcon(iconFactory3, "Loading", cameraLocation);
+        LatLng triangulatedCenterLat = getPolygonCenterPoint(polygonPointsList);
 
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(cameraLocation, 9.5f));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(triangulatedCenterLat, 11f));
          /*mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {/do odczytywanie współrzędnych z mapy aby nie strzelac na ślepo
             @Override
             public void onMapClick(LatLng latLng) {
@@ -147,6 +153,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             }
         });*/
+    }
+    private LatLng getPolygonCenterPoint(ArrayList<LatLng> polygonPointsList){
+        LatLng centerLatLng = null;
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+        for(int i = 0 ; i < polygonPointsList.size() ; i++)
+        {
+            builder.include(polygonPointsList.get(i));
+        }
+        LatLngBounds bounds = builder.build();
+        centerLatLng =  bounds.getCenter();
+
+        return centerLatLng;
     }
 
     private void addIcon(IconGenerator iconFactory, CharSequence text, LatLng position) {
