@@ -6,6 +6,7 @@ import androidx.fragment.app.FragmentActivity;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.StyleSpan;
@@ -25,13 +26,15 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.maps.android.ui.IconGenerator;
 
+import java.util.Random;
+
 import static android.graphics.Typeface.BOLD;
 import static android.graphics.Typeface.ITALIC;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
-
+    IconGenerator iconFactory,iconFactory2,iconFactory3;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,9 +49,60 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //mMap.setOnInfoWindowClickListener(RegActivity.this);
 
 
+        final Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+
+                demoTask();
+                Toast.makeText(MapsActivity.this, "update", Toast.LENGTH_SHORT).show();
+                handler.postDelayed(this, 5000);
+            }
+        }, 5000);
     }
 
+    public void demoTask()
+    {
+        Random r = new Random();
+        int number = r.nextInt(100);
+        int number2 = r.nextInt(100);
+        int number3 = r.nextInt(100);
 
+        mMap.clear();
+
+        iconFactory.setStyle(getMyColor(number));
+        LatLng cameraLocation = new LatLng(40.78, -73.85);
+        addIcon(iconFactory, number+"%", cameraLocation);
+
+        iconFactory2.setStyle(getMyColor(number2));
+        cameraLocation = new LatLng(40.75, -73.8);
+        addIcon(iconFactory2, number2+"%", cameraLocation);
+
+        cameraLocation = new LatLng(40.73, -74);
+        iconFactory3.setStyle(getMyColor(number3));
+        addIcon(iconFactory3, number3+"%", cameraLocation);
+
+    }
+    public int getMyColor(int number)
+    {
+        if(number<=50)
+        {
+            return 5;
+            //zielony 5
+        }
+        else if (number>50 & number<80)
+        {
+            return 7;
+            //pomaranc 7
+        }
+        else if (number>=80)
+        {
+            return 3;
+            //czerwony 3
+        }
+        else return 1;//default
+
+    }
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
@@ -58,23 +112,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * it inside the SupportMapFragment. This method will only be triggered once the user has
      * installed Google Play services and returned to the app.
      */
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
         // Add a marker in Sydney and move the camera
         LatLng cameraLocation = new LatLng(40.78, -73.85);
-        IconGenerator iconFactory = new IconGenerator(this);
-        addIcon(iconFactory, "Bangla1", cameraLocation);
+        iconFactory = new IconGenerator(this);
+        iconFactory.setStyle(IconGenerator.STYLE_RED);
+        addIcon(iconFactory, "Loading", cameraLocation);
 
         cameraLocation = new LatLng(40.75, -73.8);
-        iconFactory = new IconGenerator(this);
-        addIcon(iconFactory, "Bangla2", cameraLocation);
+        iconFactory2 = new IconGenerator(this);
+        iconFactory2.setStyle(IconGenerator.STYLE_GREEN);
+        addIcon(iconFactory2, "Loading", cameraLocation);
 
 
         cameraLocation = new LatLng(40.73, -74);
-        iconFactory = new IconGenerator(this);
-        addIcon(iconFactory, "Bangla3", cameraLocation);
+        iconFactory3 = new IconGenerator(this);
+        iconFactory3.setStyle(IconGenerator.STYLE_ORANGE);
+        addIcon(iconFactory3, "Loading", cameraLocation);
 
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(cameraLocation, 9.5f));
          /*mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {/do odczytywanie współrzędnych z mapy aby nie strzelac na ślepo
@@ -90,6 +148,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });*/
     }
+
     private void addIcon(IconGenerator iconFactory, CharSequence text, LatLng position) {
         MarkerOptions markerOptions = new MarkerOptions().
                 icon(BitmapDescriptorFactory.fromBitmap(iconFactory.makeIcon(text))).
