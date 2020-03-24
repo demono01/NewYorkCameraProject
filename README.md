@@ -5,5 +5,5 @@ Source ! : https://github.com/googlemaps/android-maps-utils
 
 
 Progress so far:
-![Bangla?](/image1.jpg)
+![Bangla?](/image2.gif)
 
