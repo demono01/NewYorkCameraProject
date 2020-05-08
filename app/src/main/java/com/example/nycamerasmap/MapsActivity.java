@@ -27,19 +27,35 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.maps.android.ui.IconGenerator;
 
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Random;
 
 import static android.graphics.Typeface.BOLD;
 import static android.graphics.Typeface.ITALIC;
+import com.github.nkzawa.socketio.client.IO;
+import com.github.nkzawa.socketio.client.Socket;
+import com.github.nkzawa.emitter.Emitter;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
     IconGenerator iconFactory,iconFactory2,iconFactory3;
+    private Socket mSocket;
+    {
+        try {
+            mSocket = IO.socket("");                                                                //TODO uzupełnić link do socket
+        } catch (URISyntaxException e) {}
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mSocket.on("new message", onNewMessage);                                                  //stan nowej wiadomosci
+        mSocket.connect();                                                                              //Podłączenie socketa
         setContentView(R.layout.activity_maps);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -56,13 +72,66 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void run() {
 
-                demoTask();
+                //demoTask();
+                demoJSON();
                 //Toast.makeText(MapsActivity.this, "update", Toast.LENGTH_SHORT).show();
                 handler.postDelayed(this, 5000);
             }
         }, 5000);
     }
 
+    private void demoJSON() {
+        //stworzyc obiekt
+    }
+
+    private Emitter.Listener onNewMessage = new Emitter.Listener() {
+        @Override
+        public void call(final Object... args) {
+
+            MapsActivity.this.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    JSONObject data = (JSONObject) args[0];
+                    String cameraId;
+                    String crowdOfCars;
+                    try {
+                        cameraId = data.getString("camId");
+                        crowdOfCars = data.getString("crowd");
+                    } catch (JSONException e) {
+                        return;
+                    }
+
+                    // add the message to view
+                    showStatusOnMap(cameraId, crowdOfCars);
+                }
+
+                private void showStatusOnMap(String cameraId, String numberOfCars) {
+                    mMap.clear();                                                                   //todo usuwac tylko 1 znacznik nie wszystkie przy update danych
+
+                    int number = Integer.parseInt(numberOfCars);
+                    LatLng cameraLocation;
+                    if(cameraId.equals("2CAM1"))
+                    {
+                        iconFactory.setStyle(getMyColor(number));
+                        cameraLocation = new LatLng(40.78, -73.85);
+                        addIcon(iconFactory, number+"%", cameraLocation);
+                    }
+                    else if (cameraId.equals("9CAM2"))
+                    {
+                        iconFactory2.setStyle(getMyColor(number));
+                        cameraLocation = new LatLng(40.75, -73.8);
+                        addIcon(iconFactory2, number+"%", cameraLocation);
+                    }
+                    else if (cameraId.equals("9CAM1"))
+                    {
+                        cameraLocation = new LatLng(40.73, -74);
+                        iconFactory3.setStyle(getMyColor(number));
+                        addIcon(iconFactory3, number+"%", cameraLocation);
+                    }
+                }
+            });
+        }
+    };
     public void demoTask()
     {
         Random r = new Random();
