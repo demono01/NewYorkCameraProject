@@ -81,9 +81,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void demoJSON() {
-        //stworzyc obiekt
+                                                                                                            //todo stworzyc obiekt jsona do testów?
     }
-
+    public int number2CAM1,number9CAM2,number9CAM1;
     private Emitter.Listener onNewMessage = new Emitter.Listener() {
         @Override
         public void call(final Object... args) {
@@ -106,28 +106,33 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
 
                 private void showStatusOnMap(String cameraId, String numberOfCars) {
-                    mMap.clear();                                                                   //todo usuwac tylko 1 znacznik nie wszystkie przy update danych
+                    mMap.clear();
 
                     int number = Integer.parseInt(numberOfCars);
                     LatLng cameraLocation;
                     if(cameraId.equals("2CAM1"))
                     {
-                        iconFactory.setStyle(getMyColor(number));
-                        cameraLocation = new LatLng(40.78, -73.85);
-                        addIcon(iconFactory, number+"%", cameraLocation);
+                        number2CAM1 = number;
                     }
                     else if (cameraId.equals("9CAM2"))
                     {
-                        iconFactory2.setStyle(getMyColor(number));
-                        cameraLocation = new LatLng(40.75, -73.8);
-                        addIcon(iconFactory2, number+"%", cameraLocation);
+                        number9CAM2 = number;
                     }
                     else if (cameraId.equals("9CAM1"))
                     {
-                        cameraLocation = new LatLng(40.73, -74);
-                        iconFactory3.setStyle(getMyColor(number));
-                        addIcon(iconFactory3, number+"%", cameraLocation);
+                        number9CAM1 = number;
                     }
+                    iconFactory.setStyle(getMyColor(number2CAM1));
+                    cameraLocation = new LatLng(40.78, -73.85);
+                    addIcon(iconFactory, number2CAM1+"%", cameraLocation);
+
+                    iconFactory2.setStyle(getMyColor(number9CAM2));
+                    cameraLocation = new LatLng(40.75, -73.8);
+                    addIcon(iconFactory2, number9CAM2+"%", cameraLocation);
+
+                    cameraLocation = new LatLng(40.73, -74);
+                    iconFactory3.setStyle(getMyColor(number9CAM1));
+                    addIcon(iconFactory3, number9CAM1+"%", cameraLocation);
                 }
             });
         }
