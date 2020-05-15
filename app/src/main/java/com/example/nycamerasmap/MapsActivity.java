@@ -10,6 +10,7 @@ import android.os.Handler;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.StyleSpan;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
@@ -27,35 +28,34 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.maps.android.ui.IconGenerator;
 
+import org.java_websocket.client.WebSocketClient;
+import org.java_websocket.handshake.ServerHandshake;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Random;
 
 import static android.graphics.Typeface.BOLD;
 import static android.graphics.Typeface.ITALIC;
-import com.github.nkzawa.socketio.client.IO;
-import com.github.nkzawa.socketio.client.Socket;
-import com.github.nkzawa.emitter.Emitter;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+
 
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
-
+    private WebSocketClient mWebSocketClient;
     private GoogleMap mMap;
     IconGenerator iconFactory,iconFactory2,iconFactory3;
-    private Socket mSocket;
-    {
-        try {
-            mSocket = IO.socket("");                                                                //TODO uzupełnić link do socket
-        } catch (URISyntaxException e) {}
-    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mSocket.on("new message", onNewMessage);                                                  //stan nowej wiadomosci
-        mSocket.connect();                                                                              //Podłączenie socketa
+        connectWebSocket();
         setContentView(R.layout.activity_maps);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -67,7 +67,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //mMap.setOnInfoWindowClickListener(RegActivity.this);
 
 
-        final Handler handler = new Handler();
+        /*final Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -77,67 +77,101 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 //Toast.makeText(MapsActivity.this, "update", Toast.LENGTH_SHORT).show();
                 handler.postDelayed(this, 5000);
             }
-        }, 5000);
+        }, 5000);*/
     }
+    public void onDestroy() {
 
-    private void demoJSON() {
-                                                                                                            //todo stworzyc obiekt jsona do testów?
+        super.onDestroy();
+
+
+    }
+    private void connectWebSocket() {
+        URI uri;
+        try {
+            uri = new URI("wss://b11c0le9qc.execute-api.eu-west-2.amazonaws.com/Prod");
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        mWebSocketClient = new WebSocketClient(uri) {
+            @Override
+            public void onOpen(ServerHandshake serverHandshake) {
+                Log.i("Websocket", "Opened");
+
+            }
+
+            @Override
+            public void onMessage(String s) {
+                final String message = s;
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            String cameraId, crowdOfCars;
+                            JSONObject obj = new JSONObject(message);
+                            cameraId = obj.getString("Id");
+                            crowdOfCars = obj.getString("crowd");
+                            showStatusOnMap(cameraId,crowdOfCars);
+                            Log.d("Websocket", obj.toString());
+
+                        } catch (Throwable t) {
+                            Log.e("Websocket", "Could not parse malformed JSON: \"" + message + "\"");
+
+                        }
+
+                    }
+                });
+            }
+
+            @Override
+            public void onClose(int i, String s, boolean b) {
+                Log.i("Websocket", "Closed " + s);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Log.i("Websocket", "Error " + e.getMessage());
+            }
+        };
+        mWebSocketClient.connect();
     }
     public int number2CAM1,number9CAM2,number9CAM1;
-    private Emitter.Listener onNewMessage = new Emitter.Listener() {
-        @Override
-        public void call(final Object... args) {
+    private void showStatusOnMap(String cameraId, String numberOfCars) {
+        mMap.clear();
 
-            MapsActivity.this.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    JSONObject data = (JSONObject) args[0];
-                    String cameraId;
-                    String crowdOfCars;
-                    try {
-                        cameraId = data.getString("camId");
-                        crowdOfCars = data.getString("crowd");
-                    } catch (JSONException e) {
-                        return;
-                    }
-
-                    // add the message to view
-                    showStatusOnMap(cameraId, crowdOfCars);
-                }
-
-                private void showStatusOnMap(String cameraId, String numberOfCars) {
-                    mMap.clear();
-
-                    int number = Integer.parseInt(numberOfCars);
-                    LatLng cameraLocation;
-                    if(cameraId.equals("2CAM1"))
-                    {
-                        number2CAM1 = number;
-                    }
-                    else if (cameraId.equals("9CAM2"))
-                    {
-                        number9CAM2 = number;
-                    }
-                    else if (cameraId.equals("9CAM1"))
-                    {
-                        number9CAM1 = number;
-                    }
-                    iconFactory.setStyle(getMyColor(number2CAM1));
-                    cameraLocation = new LatLng(40.78, -73.85);
-                    addIcon(iconFactory, number2CAM1+"%", cameraLocation);
-
-                    iconFactory2.setStyle(getMyColor(number9CAM2));
-                    cameraLocation = new LatLng(40.75, -73.8);
-                    addIcon(iconFactory2, number9CAM2+"%", cameraLocation);
-
-                    cameraLocation = new LatLng(40.73, -74);
-                    iconFactory3.setStyle(getMyColor(number9CAM1));
-                    addIcon(iconFactory3, number9CAM1+"%", cameraLocation);
-                }
-            });
+        int number = Integer.parseInt(numberOfCars);
+        LatLng cameraLocation;
+        if(cameraId.equals("2CAM1"))
+        {
+            number2CAM1 = number;
         }
-    };
-    public void demoTask()
+        else if (cameraId.equals("9CAM2"))
+        {
+            number9CAM2 = number;
+        }
+        else if (cameraId.equals("9CAM1"))
+        {
+            number9CAM1 = number;
+        }
+        iconFactory.setStyle(getMyColor(number2CAM1));
+        cameraLocation = new LatLng(40.78, -73.85);
+        addIcon(iconFactory, number2CAM1+"%", cameraLocation);
+
+        iconFactory2.setStyle(getMyColor(number9CAM2));
+        cameraLocation = new LatLng(40.75, -73.8);
+        addIcon(iconFactory2, number9CAM2+"%", cameraLocation);
+
+        cameraLocation = new LatLng(40.73, -74);
+        iconFactory3.setStyle(getMyColor(number9CAM1));
+        addIcon(iconFactory3, number9CAM1+"%", cameraLocation);
+    }
+
+
+
+
+    /*public void demoTask()
     {
         Random r = new Random();
         int number = r.nextInt(100);
@@ -158,7 +192,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         iconFactory3.setStyle(getMyColor(number3));
         addIcon(iconFactory3, number3+"%", cameraLocation);
 
-    }
+    }*/
     public int getMyColor(int number)
     {
         if(number<=50)
@@ -250,7 +284,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.addMarker(markerOptions);
     }
 
-    private CharSequence makeCharSequence() {
+    /*private CharSequence makeCharSequence() {
         String prefix = "Mixing ";
         String suffix = "different fonts";
         String sequence = prefix + suffix;
@@ -258,6 +292,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         ssb.setSpan(new StyleSpan(ITALIC), 0, prefix.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         ssb.setSpan(new StyleSpan(BOLD), prefix.length(), sequence.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         return ssb;
-    }
+    }*/
 
 }

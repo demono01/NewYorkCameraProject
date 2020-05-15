@@ -19,7 +19,7 @@ android {
 }
 
 dependencies {
-    implementation 'com.github.nkzawa:socket.io-client:0.6.0'
+    implementation "org.java-websocket:Java-WebSocket:1.5.1"
     implementation 'com.google.maps.android:android-maps-utils:1.0.0'
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.0.2'
